@@ -87,4 +87,5 @@ public class PetstoreAPITest {
         String message = response.jsonPath().getString("message");
         assertEquals("12345", message);
     }
+    //todo: add some more test cases
 }
