@@ -87,5 +87,47 @@ public class PetstoreAPITest {
         String message = response.jsonPath().getString("message");
         assertEquals("12345", message);
     }
-    //todo: add some more test cases
+    //todo: add some more test cases (test more GET methods, test POST methods, PUT and DELETE)
+
+    /**
+     * Test case #4: Update a pet in the store with form data
+     */
+    @Test
+    public void testUpdatePetWithFormData() {
+        // Given: A pet ID to update and form data fields
+        int petID = 12345; // Assuming a pet with this ID already exists
+        String updatedName = "Yalee";
+        String updatedStatus = "sold";
+
+        // When: We make a POST request to update the pet with form data
+        Response response = given()
+                .contentType(ContentType.URLENC)
+                .formParam("name", updatedName)
+                .formParam("status", updatedStatus)
+                .when()
+                .post("/pet/" + petID)
+                .then()
+                .statusCode(200)
+                .extract().response();
+
+        // Then: Verify that the pet was updated successfully
+        String message = response.jsonPath().getString("message");
+        assertEquals(String.valueOf(petID), message); // Assuming this is the expected response message
+
+        // Optionally: Retrieve the updated pet and verify the changes
+        Response getResponse = given()
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/pet/" + petID)
+                .then()
+                .statusCode(200)
+                .extract().response();
+
+        // Verify that the pet's name and status were updated
+        String actualName = getResponse.jsonPath().getString("name");
+        String actualStatus = getResponse.jsonPath().getString("status");
+
+        assertEquals(updatedName, actualName, "The pet name should be updated.");
+        assertEquals(updatedStatus, actualStatus, "The pet status should be updated.");
+    }
 }
