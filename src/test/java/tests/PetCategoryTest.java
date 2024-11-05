@@ -1,5 +1,6 @@
 package tests;
 
+import config.TestRunConfig;
 import dto.PetDTO;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.AfterEach;
@@ -10,9 +11,9 @@ import static org.hamcrest.CoreMatchers.is;
 
 import response.CustomResponse;
 import services.APIService;
-import utils.ConfUtils;
-import config.TestValues;
-import utils.DTOUtils;
+import utils.ConfProperties;
+import config.TestConstants;
+import utils.TestValueGenerator;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -23,23 +24,27 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * This test class contains all the test cases
- * for pet category of Petstore Sample API
+ * <p>This test class contains all the test cases
+ * for pet category of Petstore Sample API</p>
  *
- * Link:  <a href="https://docs.google.com/spreadsheets/d/1Aa9B6OfLG3Hz6BBSKFhrd6rHJu1l7ONiVWqeCPAVuuA/edit?usp=sharing">Test cases sheet</a>
+ * Link:  <a href="https://docs.google.com/spreadsheets/d/1Aa9B6OfLG3Hz6BBSKFhrd6rHJu1l7ONiVWqeCPAVuuA/edit?usp=sharing">Test cases Google sheet</a>
  */
 
 public class PetCategoryTest extends TestRunConfig {
 
-    private final long TEST_PET_ID = TestValues.petID;
-    private static final String TEST_PET_NAME = TestValues.PET_NAME;
-    private static final String TEST_PET_STATUS = TestValues.PET_STATUS;
+    private final long TEST_PET_ID = TestValueGenerator.randomId();
+    private static final String TEST_PET_NAME = TestConstants.PET_NAME;
+    private static final String TEST_PET_STATUS = TestValueGenerator.randomPetStatus();
     private boolean isPetDeleted = false;
 
     @BeforeEach
     public void setUp() {
         // initializing petDTO
-        PetDTO petDTO = DTOUtils.createPetDTO(TEST_PET_ID, TEST_PET_NAME, TEST_PET_STATUS);
+        PetDTO petDTO = PetDTO.builder()
+                .id(TEST_PET_ID)
+                .name(TEST_PET_NAME)
+                .status(TEST_PET_STATUS)
+                .build();
 
         // add a pet
         CustomResponse<PetDTO> addResponse = APIService.addPet(petDTO);
@@ -56,7 +61,7 @@ public class PetCategoryTest extends TestRunConfig {
         }
     }
 
-    /*
+    /**
      * Test case #1: Verify "POST - Add a New Pet to the Store" API endpoint
      */
     @Test
@@ -67,13 +72,13 @@ public class PetCategoryTest extends TestRunConfig {
         assertThat(TEST_PET_NAME, is(equalTo(getResponse.getData().getName())));
     }
 
-    /*
+    /**
      * Test case #2: Upload an image of the pet
      */
     @Test
     public void testUploadPetImageFromURL() throws Exception {
         // Use a sample image URL
-        String imageUrl = ConfUtils.getProperty("sampleImage_URL");
+        String imageUrl = ConfProperties.getProperty("sampleImage_URL");
 
         // Call the utility method to upload the image from the URL
         CustomResponse<Void> uploadResponse = APIService.uploadPetImageFromURL(TEST_PET_ID, imageUrl);
@@ -82,7 +87,7 @@ public class PetCategoryTest extends TestRunConfig {
         assertThat(200, is(equalTo(uploadResponse.getStatusCode())));
     }
 
-    /*
+    /**
      * Test case #3: (Negative) Upload a non-image file to the image form field of the pet
      */
     @Test
@@ -104,7 +109,7 @@ public class PetCategoryTest extends TestRunConfig {
         assertThat(400, is(equalTo(response.getStatusCode())));
     }
 
-    /*
+    /**
      * Test case #4: Verify "GET Find Pet by ID" API endpoint
      */
     @Test
@@ -115,7 +120,7 @@ public class PetCategoryTest extends TestRunConfig {
         assertThat(TEST_PET_NAME, is(equalTo(getResponse.getData().getName())));
     }
 
-    /*
+    /**
      * Test case #5: Verify "DELETE Delete a Pet" API endpoint
      */
     @Test
@@ -131,7 +136,7 @@ public class PetCategoryTest extends TestRunConfig {
         assertThat(404, is(equalTo(getResponse.getStatusCode())));
     }
 
-    /*
+    /**
      * Test case #6: Verify "POST Update a pet with form data" API endpoint
      */
     @Test
@@ -149,15 +154,15 @@ public class PetCategoryTest extends TestRunConfig {
         assertThat(updatedStatus, is(equalTo(getResponse.getData().getStatus())));
     }
 
-    /*
+    /**
      * Test case #7: Verify "GET Find Pets by Status" API endpoint works for different pet status values
      */
     @Test
     public void testFindPetsByStatus() {
         // creating pets
-        APIService.addPet(DTOUtils.createPetDTO(1L, "Issu", "available")); // available pet added
-        APIService.addPet(DTOUtils.createPetDTO(2L, "Vory", "pending")); // pending pet added
-        APIService.addPet(DTOUtils.createPetDTO(3L, "Garry", "sold")); // sold pet added
+        APIService.addPet(PetDTO.builder().id(1L).name("Issu").status("available").build()); // available pet added
+        APIService.addPet(PetDTO.builder().id(2L).name("Vory").status("pending").build());   // pending pet added
+        APIService.addPet(PetDTO.builder().id(3L).name("Garry").status("sold").build());     // sold pet added
 
         // put all status values in a list
         List<String> statusList = Arrays.asList("available", "pending", "sold");
@@ -175,5 +180,4 @@ public class PetCategoryTest extends TestRunConfig {
     }
 
     //todo: add more test cases (also negative ones) of methods where possible
-    //      fix compiler errors
 }

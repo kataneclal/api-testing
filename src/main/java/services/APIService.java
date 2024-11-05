@@ -6,12 +6,11 @@ import io.restassured.http.ContentType;
 
 import org.springframework.web.client.RestTemplate;
 
-import org.json.JSONObject;
-
 import response.CustomResponse;
-import utils.ConfUtils;
+import utils.ConfProperties;
 
 import dto.*;
+import utils.TestValueGenerator;
 
 import java.io.File;
 import java.time.Instant;
@@ -22,36 +21,32 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+/**
+ * <p>This class contains all the Petstore Sample API methods</p>
+ * <p>See: <a href="petstore.swagger.io/">https://petstore.swagger.io/</a></p>
+ */
+
+
 public final class APIService {
 
     // Creating an object of RestTemplate
-    static String baseURL = ConfUtils.getProperty("base_URL");
-    private final RestTemplate restTemplate = new RestTemplate();
+    static String baseURL = ConfProperties.getProperty("base_URL");
+    private final RestTemplate restTemplate = new RestTemplate();   // Creating an object of RestTemplate
 
 
-    /*
-    Add a pet
+    /**
+    "Add a pet" method
      */
     public static CustomResponse<PetDTO> addPet(PetDTO petDTO) {
-        Response restAssuredResponse = RestAssured.given()
+        Response response = RestAssured.given()
                 .contentType(ContentType.JSON)
                 .body(petDTO)
-                .when()
-                .post("/pet")
-                .then()
-                .statusCode(200)
-                .extract()
-                .response();
+                .post("/pet");
 
-        PetDTO responseData = restAssuredResponse.as(PetDTO.class);
-        return new CustomResponse<>(
-                restAssuredResponse.getStatusCode(),
-                restAssuredResponse.getStatusLine(),
-                responseData
-        );
+        return CustomResponse.fromRestAssuredResponse(response, PetDTO.class);
     }
-    /*
-    Upload pet image using URL
+    /**
+    "Upload pet image using URL" method
      */
     public static CustomResponse<Void> uploadPetImageFromURL(long petId, String imageUrl) throws Exception {
         // Step 1: Download the image from the given URL
@@ -73,230 +68,158 @@ public final class APIService {
         out.close();
 
         // Step 2: Upload the image file to the pet
-        Response restAssuredResponse = RestAssured.given()
+        Response response = RestAssured.given()
                 .contentType(ContentType.MULTIPART)
                 .multiPart("file", tempFile.toFile())
-                .when()
-                .post("/pet/" + petId + "/uploadImage")
-                .then()
-                .extract().response();
+                .post("/pet/" + petId + "/uploadImage");
 
         // delete the temporary file after upload
         Files.delete(tempFile);
 
-        return new CustomResponse<>(
-                restAssuredResponse.getStatusCode(),
-                restAssuredResponse.getStatusLine(),
-                null
-        );
+        return CustomResponse.fromRestAssuredResponse(response, Void.class);
     }
 
-    /*
-    Upload non-image file to pet
+    /**
+    "Upload non-image file to pet" method
      */
     public static CustomResponse<Void> uploadNonImageFileToPet(long petId, File nonImageFile) {
-        Response restAssuredResponse = RestAssured.given()
+        Response response = RestAssured.given()
                 .contentType("multipart/form-data")
                 .multiPart("file", nonImageFile)
-                .post("/pet/" + petId + "/uploadImage")
-                .then()
-                .extract()
-                .response();
+                .post("/pet/" + petId + "/uploadImage");
 
-        return new CustomResponse<>(
-                restAssuredResponse.getStatusCode(),
-                restAssuredResponse.getStatusLine(),
-                null
-        );
+        return CustomResponse.fromRestAssuredResponse(response, Void.class);
     }
 
-    /*
-    Delete pet by ID
+    /**
+    "Delete pet by ID" method
      */
     public static CustomResponse<Void> deletePet(long petID) {
-        Response restAssuredResponse = RestAssured.given()
-                .contentType(ContentType.JSON)
-                .when()
-                .delete("/pet/" + petID)
-                .then()
-                .extract().response();
+        Response response = RestAssured.given()
+                .delete("/pet/" + petID);
 
-        return new CustomResponse<>(
-                restAssuredResponse.getStatusCode(),
-                restAssuredResponse.getStatusLine(),
-                null
-        );
+        return CustomResponse.fromRestAssuredResponse(response, Void.class);
     }
 
-    /*
-    Get pet by ID
+    /**
+    "Get pet by ID" method
      */
     public static CustomResponse<PetDTO> getPetByID(long petID) {
-        Response restAssuredResponse = RestAssured.given()
-                .contentType(ContentType.JSON)
-                .when()
-                .get("/pet/" + petID)
-                .then()
-                .extract()
-                .response();
+        Response response = RestAssured.given()
+                .get("/pet/" + petID);
 
-        PetDTO petDTO = restAssuredResponse.as(PetDTO.class);
-        return new CustomResponse<>(
-                restAssuredResponse.getStatusCode(),
-                restAssuredResponse.getStatusLine(),
-                petDTO
-        );
+        return CustomResponse.fromRestAssuredResponse(response, PetDTO.class);
     }
 
-    /*
-    Update pet using form data
+    /**
+    "Update pet using form data" method
      */
     public static CustomResponse<Void> updatePetWithFormData(long petID, String petName, String petStatus) {
-        Response restAssuredResponse = RestAssured.given()
+        Response response = RestAssured.given()
                 .contentType(ContentType.URLENC)
                 .formParam("name", petName)
                 .formParam("status", petStatus)
-                .when()
-                .post("/pet/" + petID)
-                .then()
-                .extract().response();
+                .post("/pet/" + petID);
 
-        return new CustomResponse<>(
-                restAssuredResponse.getStatusCode(),
-                restAssuredResponse.getStatusLine(),
-                null
-        );
+        return CustomResponse.fromRestAssuredResponse(response, Void.class);
     }
 
-    /*
-    Find pet by status
+    /**
+    "Find pet by status" method
      */
-    public static CustomResponse<List<PetDTO>> findPetsByStatus (String status) {
-        Response restAssuredResponse = RestAssured.given()
-                .contentType(ContentType.JSON)
+    public static CustomResponse<List<PetDTO>> findPetsByStatus(String status) {
+        Response response = RestAssured.given()
                 .queryParam("status", status)
-                .when()
-                .get("/pet/findByStatus")
-                .then()
-                .extract()
-                .response();
+                .get("/pet/findByStatus");
 
-        List<PetDTO> petList = Arrays.asList(restAssuredResponse.as(PetDTO[].class));
-        return new CustomResponse<>(
-                restAssuredResponse.getStatusCode(),
-                restAssuredResponse.getStatusLine(),
-                petList
-        );
+        // сonvert the response to an array of PetDTO
+        CustomResponse<PetDTO[]> arrayResponse = CustomResponse.fromRestAssuredResponse(response, PetDTO[].class);
+
+        // сonvert the array to a List
+        List<PetDTO> petList = arrayResponse.getData() != null ? Arrays.asList(arrayResponse.getData()) : null;
+
+        // return a new CustomResponse with the list instead of an array
+        return CustomResponse.<List<PetDTO>>builder()
+                .statusCode(arrayResponse.getStatusCode())
+                .message(arrayResponse.getMessage())
+                .data(petList)
+                .build();
     }
 
-    /*
-    Get pet without status check
+    /**
+    "Get pet without status check" method
      */
     public static CustomResponse<Void> getPetWithoutStatusCheck(long petID) {
-        Response restAssuredResponse = RestAssured.given()
-                .contentType(ContentType.JSON)
-                .when()
-                .get("/pet/" + petID)
-                .andReturn();
+        Response response = RestAssured.given()
+                .get("/pet/" + petID);
 
-        PetDTO petDTO = restAssuredResponse.as(PetDTO.class);
-        return new CustomResponse<>(
-                restAssuredResponse.getStatusCode(),
-                restAssuredResponse.getStatusLine(),
-                null
-        );
+        return CustomResponse.fromRestAssuredResponse(response, Void.class);
     }
 
-    /*
-    Get store inventory
+    /**
+    "Get store inventory" method
      */
     public static CustomResponse<Map<String, Integer>> getStoreInventory() {
-        Response restAssuredResponse = RestAssured.given()
+        Response response = RestAssured.given()
                 .baseUri(baseURL)
-                .when()
-                .get("/store/inventory")
-                .then()
-                .extract()
-                .response();
+                .get("/store/inventory");
 
-        Map<String, Integer> inventory = restAssuredResponse.as(Map.class);
-        return new CustomResponse<>(
-                restAssuredResponse.getStatusCode(),
-                restAssuredResponse.getStatusLine(),
-                inventory
-        );
+        @SuppressWarnings("unchecked")
+        Map<String, Integer> inventory = (Map<String, Integer>)response.as(Map.class);
+
+        return CustomResponse.<Map<String, Integer>>builder()
+                .statusCode(response.getStatusCode())
+                .message(response.getStatusLine())
+                .data(inventory)
+                .build();
+
+        //todo: read about LOG().ALL() and implement it in Service methods (where needed)
+        //      refactor methods according to refactored CustomResponse
     }
 
-    /*
-    Place order for a pet
+    /**
+    "Place order for a pet" method
      */
     public static CustomResponse<OrderDTO> placeOrderForPet(long petId, int quantity) {
-        // Generate random unique orderId
-        int orderId = new Random().nextInt(1, 10000);
+        long orderId = TestValueGenerator.randomId();
 
-        // Create the order details dynamically
-        Map<String, Object> orderDetails = new HashMap<>();
-        orderDetails.put("id", orderId);
-        orderDetails.put("petId", petId);
-        orderDetails.put("quantity", quantity);
-        orderDetails.put("shipDate", Instant.now().toString());
-        orderDetails.put("status", "placed");
-        orderDetails.put("complete", true);
+        OrderDTO orderDTO = OrderDTO.builder()
+                .id(orderId)
+                .petId(petId)
+                .quantity(quantity)
+                .shipDate(Instant.now().toString())
+                .status("placed")
+                .complete(true)
+                .build();
 
-        // send POST request to place the order
-        Response restAssuredResponse = RestAssured.given()
+        Response response = RestAssured.given()
                 .contentType(ContentType.JSON)
-                .body(orderDetails)
-                .when()
-                .post("/store/order")
-                .then()
-                .extract().response();
+                .body(orderDTO)
+                .post("/store/order");
 
-        OrderDTO orderDTO = restAssuredResponse.as(OrderDTO.class);
-        return new CustomResponse<>(
-                restAssuredResponse.getStatusCode(),
-                restAssuredResponse.getStatusLine(),
-                orderDTO
-        );
+        return CustomResponse.fromRestAssuredResponse(response, OrderDTO.class);
     }
 
-    /*
-    Get order by ID
+    /**
+    "Get order by ID" method
      */
     public static CustomResponse<OrderDTO> getOrderById(long orderId) {
-        Response restAssuredResponse = RestAssured.given()
-                .contentType(ContentType.JSON)
-                .when()
-                .get("/store/order/" + orderId)
-                .then()
-                .extract().response();
+        Response response = RestAssured.given()
+                .get("/store/order/" + orderId);
 
-        OrderDTO orderDTO = restAssuredResponse.as(OrderDTO.class);
-        return new CustomResponse<>(
-                restAssuredResponse.getStatusCode(),
-                restAssuredResponse.getStatusLine(),
-                orderDTO
-        );
+        return CustomResponse.fromRestAssuredResponse(response, OrderDTO.class);
     }
 
-    /*
-    Delete order by ID
+    /**
+    "Delete order by ID" method
      */
     public static CustomResponse<Void> deleteOrderById(long orderId) {
-        Response restAssuredResponse = RestAssured.given()
-                .contentType(ContentType.JSON)
-                .when()
-                .delete("/store/order/" + orderId)
-                .then()
-                .extract().response();
+        Response response = RestAssured.given()
+                .delete("/store/order/" + orderId);
 
-        return new CustomResponse<>(
-                restAssuredResponse.getStatusCode(),
-                restAssuredResponse.getStatusLine(),
-                null  // No data for a DELETE request
-        );
-
-//    public CustomCustomResponse<Void><Void>Entity<String> createUser(UserDTO userDTO) {
+        return CustomResponse.fromRestAssuredResponse(response, Void.class);
+    }
+//    public CustomResponse<Void><Void>Entity<String> createUser(UserDTO userDTO) {
 //        String url = baseURL + "/user";
 //
 //        // Set the headers
@@ -308,5 +231,5 @@ public final class APIService {
 //
 //        // Make the POST request to create the user
 //        return restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
-    }
+
 }
