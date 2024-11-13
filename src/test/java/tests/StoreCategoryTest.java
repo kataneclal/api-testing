@@ -2,10 +2,12 @@ package tests;
 
 import config.TestRunConfig;
 import dto.OrderDTO;
+import io.qameta.allure.*;
+import io.qameta.allure.junit5.AllureJunit5;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import response.CustomResponse;
 import services.APIService;
 import utils.TestValueGenerator;
@@ -24,7 +26,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  * <p>Link:
  * <a href="https://docs.google.com/spreadsheets/d/1Aa9B6OfLG3Hz6BBSKFhrd6rHJu1l7ONiVWqeCPAVuuA/edit?usp=sharing">Test cases sheet</a>
  */
-
+@ExtendWith(AllureJunit5.class)
+@Epic("Petstore API Tests")
+@Feature("Store Category")
 public class StoreCategoryTest extends TestRunConfig {
 
     private boolean isOrderDeleted = false;
@@ -33,6 +37,7 @@ public class StoreCategoryTest extends TestRunConfig {
     private final int QUANTITY = TestValueGenerator.randomInt(1, 10);
 
     @BeforeEach
+    @Step("Setup for each test - placing an order for a pet")
     public void setUp() {
         CustomResponse<OrderDTO> orderResponse = APIService.placeOrderForPet(PET_ID, QUANTITY);
         assertThat(200, is(equalTo(orderResponse.getStatusCode())));
@@ -41,6 +46,7 @@ public class StoreCategoryTest extends TestRunConfig {
     }
 
     @AfterEach
+    @Step("Cleanup for each test - deleting the order placed before")
     public void cleanUp() {
         if (!isOrderDeleted) {
             APIService.deleteOrderById(orderID);
@@ -49,9 +55,11 @@ public class StoreCategoryTest extends TestRunConfig {
     }
 
     /**
-     * Test case #8: Verify that the pet inventory is returned by status
+     * Test case #8: Verify "GET Returns pet inventories by status" API Endpoint
      */
     @Test
+    @Story("Test case #8: Verify \"GET Returns pet inventories by status\" API Endpoint")
+    @Description("Return the info of pets in stock by status")
     public void testGetStoreInventory() {
         CustomResponse<Map<String, Integer>> response = APIService.getStoreInventory();
 
@@ -73,6 +81,8 @@ public class StoreCategoryTest extends TestRunConfig {
      * Test case #9: Verify "POST Place an order for a pet" API Endpoint
      */
     @Test
+    @Story("Test case #9: Verify \"POST Place an order for a pet\" API Endpoint")
+    @Description("Place an order for a number of available pets")
     public void testPlaceOrderForPet() {
         // generate a random petId and quantity
         long petId = TestValueGenerator.randomId();
@@ -91,6 +101,8 @@ public class StoreCategoryTest extends TestRunConfig {
      * Test case #10: Verify "GET /store/order/{orderId} Find purchase order by ID" API Endpoint
      */
     @Test
+    @Story("Verify \"GET /store/order/{orderId} Find purchase order by ID\" API Endpoint")
+    @Description("Return the id of an existing order and verify that it's the correct one")
     public void testGetOrderByID() {
         // get the order and verify response status
         CustomResponse<OrderDTO> getResponse = APIService.getOrderById(orderID);
@@ -105,6 +117,8 @@ public class StoreCategoryTest extends TestRunConfig {
      * Test case #11: Verify "DELETE /store/order/{orderId} Delete purchase order by ID" API Endpoint
      */
     @Test
+    @Story("Test case #11: Verify \"DELETE /store/order/{orderId} Delete purchase order by ID\" API Endpoint")
+    @Description("Delete an existing order found by id")
     public void testDeleteOrderByID() {
         // Delete the order using the utility method
         CustomResponse<Void> deleteResponse = APIService.deleteOrderById(orderID);

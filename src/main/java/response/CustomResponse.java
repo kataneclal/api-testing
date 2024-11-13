@@ -40,7 +40,6 @@ public class CustomResponse<T> {
                 .build();
     }
 
-    // todo: refactor all usages of CustomResponse
-    //       add JSON schema
+    // todo: add JSON schema validation
 
 }

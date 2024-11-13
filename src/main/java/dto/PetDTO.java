@@ -1,9 +1,9 @@
 package dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
+import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -11,6 +11,9 @@ import lombok.*;
 @Builder
 public class PetDTO {
     private long id;
+    private CategoryDTO category;
     private String name;
     private String status;
+    private List<String> photoUrls;
+    private List<TagDTO> tags;
 }

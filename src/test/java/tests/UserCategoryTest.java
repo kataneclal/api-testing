@@ -3,7 +3,7 @@ package tests;
 
 import config.TestRunConfig;
 import dto.UserDTO;
-import org.json.JSONObject;
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;

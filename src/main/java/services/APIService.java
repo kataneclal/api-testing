@@ -39,9 +39,14 @@ public final class APIService {
      */
     public static CustomResponse<PetDTO> addPet(PetDTO petDTO) {
         Response response = RestAssured.given()
+                .log().headers()
+                .log().body()
                 .contentType(ContentType.JSON)
                 .body(petDTO)
-                .post("/pet");
+                .post("/pet")
+                .then()
+                .log().status()
+                .extract().response();
 
         return CustomResponse.fromRestAssuredResponse(response, PetDTO.class);
     }
@@ -69,9 +74,15 @@ public final class APIService {
 
         // Step 2: Upload the image file to the pet
         Response response = RestAssured.given()
+                .log().headers()
+                .log().body()
                 .contentType(ContentType.MULTIPART)
                 .multiPart("file", tempFile.toFile())
-                .post("/pet/" + petId + "/uploadImage");
+                .post("/pet/" + petId + "/uploadImage")
+                .then()
+                .log().status()
+                .extract().response();
+
 
         // delete the temporary file after upload
         Files.delete(tempFile);
@@ -84,9 +95,14 @@ public final class APIService {
      */
     public static CustomResponse<Void> uploadNonImageFileToPet(long petId, File nonImageFile) {
         Response response = RestAssured.given()
+                .log().headers()
+                .log().body()
                 .contentType("multipart/form-data")
                 .multiPart("file", nonImageFile)
-                .post("/pet/" + petId + "/uploadImage");
+                .post("/pet/" + petId + "/uploadImage")
+                .then()
+                .log().status()
+                .extract().response();
 
         return CustomResponse.fromRestAssuredResponse(response, Void.class);
     }
@@ -96,7 +112,11 @@ public final class APIService {
      */
     public static CustomResponse<Void> deletePet(long petID) {
         Response response = RestAssured.given()
-                .delete("/pet/" + petID);
+                .log().headers()
+                .delete("/pet/" + petID)
+                .then()
+                .log().status()
+                .extract().response();
 
         return CustomResponse.fromRestAssuredResponse(response, Void.class);
     }
@@ -106,7 +126,11 @@ public final class APIService {
      */
     public static CustomResponse<PetDTO> getPetByID(long petID) {
         Response response = RestAssured.given()
-                .get("/pet/" + petID);
+                .log().headers()
+                .get("/pet/" + petID)
+                .then()
+                .log().status()
+                .extract().response();
 
         return CustomResponse.fromRestAssuredResponse(response, PetDTO.class);
     }
@@ -116,10 +140,15 @@ public final class APIService {
      */
     public static CustomResponse<Void> updatePetWithFormData(long petID, String petName, String petStatus) {
         Response response = RestAssured.given()
+                .log().headers()
+                .log().body()
                 .contentType(ContentType.URLENC)
                 .formParam("name", petName)
                 .formParam("status", petStatus)
-                .post("/pet/" + petID);
+                .post("/pet/" + petID)
+                .then()
+                .log().status()
+                .extract().response();
 
         return CustomResponse.fromRestAssuredResponse(response, Void.class);
     }
@@ -129,8 +158,12 @@ public final class APIService {
      */
     public static CustomResponse<List<PetDTO>> findPetsByStatus(String status) {
         Response response = RestAssured.given()
+                .log().headers()
                 .queryParam("status", status)
-                .get("/pet/findByStatus");
+                .get("/pet/findByStatus")
+                .then()
+                .log().status()
+                .extract().response();
 
         // сonvert the response to an array of PetDTO
         CustomResponse<PetDTO[]> arrayResponse = CustomResponse.fromRestAssuredResponse(response, PetDTO[].class);
@@ -172,9 +205,6 @@ public final class APIService {
                 .message(response.getStatusLine())
                 .data(inventory)
                 .build();
-
-        //todo: read about LOG().ALL() and implement it in Service methods (where needed)
-        //      refactor methods according to refactored CustomResponse
     }
 
     /**
@@ -193,9 +223,14 @@ public final class APIService {
                 .build();
 
         Response response = RestAssured.given()
+                .log().headers()
+                .log().body()
                 .contentType(ContentType.JSON)
                 .body(orderDTO)
-                .post("/store/order");
+                .post("/store/order")
+                .then()
+                .log().status()
+                .extract().response();
 
         return CustomResponse.fromRestAssuredResponse(response, OrderDTO.class);
     }
@@ -205,7 +240,11 @@ public final class APIService {
      */
     public static CustomResponse<OrderDTO> getOrderById(long orderId) {
         Response response = RestAssured.given()
-                .get("/store/order/" + orderId);
+                .log().headers()
+                .get("/store/order/" + orderId)
+                .then()
+                .log().status()
+                .extract().response();
 
         return CustomResponse.fromRestAssuredResponse(response, OrderDTO.class);
     }
@@ -215,21 +254,12 @@ public final class APIService {
      */
     public static CustomResponse<Void> deleteOrderById(long orderId) {
         Response response = RestAssured.given()
-                .delete("/store/order/" + orderId);
+                .log().headers()
+                .delete("/store/order/" + orderId)
+                .then()
+                .log().status()
+                .extract().response();
 
         return CustomResponse.fromRestAssuredResponse(response, Void.class);
     }
-//    public CustomResponse<Void><Void>Entity<String> createUser(UserDTO userDTO) {
-//        String url = baseURL + "/user";
-//
-//        // Set the headers
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.setContentType(MediaType.APPLICATION_JSON);
-//
-//        // Create the HttpEntity object with headers and the user payload
-//        HttpEntity<UserDTO> requestEntity = new HttpEntity<>(userDTO, headers);
-//
-//        // Make the POST request to create the user
-//        return restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
-
 }
