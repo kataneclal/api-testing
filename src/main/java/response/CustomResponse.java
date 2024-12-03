@@ -29,7 +29,6 @@ public class CustomResponse<T> {
 
         T data = null;
         if (statusCode == 200) {
-            // Parse response data as the specified DTO class
             data = restAssuredResponse.as(dataClass);
         }
 

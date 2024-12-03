@@ -39,7 +39,7 @@
             <plugin>
                 <groupId>io.qameta.allure</groupId>
                 <artifactId>allure-maven</artifactId>
-                <version>2.15.1</version>
+                <version>2.13.0</version>
             </plugin>
             <!-- other plugins can go here -->
         </plugins>
@@ -63,33 +63,12 @@
             <artifactId>rest-assured</artifactId>
             <version>5.5.0</version>
         </dependency>
-        <!-- JSON path for handling JSON responses -->
-        <dependency>
-            <groupId>io.rest-assured</groupId>
-            <artifactId>json-path</artifactId>
-            <version>5.5.0</version>
-        </dependency>
-        <!-- XML path for handling XML responses -->
-        <dependency>
-            <groupId>io.rest-assured</groupId>
-            <artifactId>xml-path</artifactId>
-            <version>5.5.0</version>
-        </dependency>
-        <dependency>
-            <groupId>io.rest-assured</groupId>
-            <artifactId>json-schema-validator</artifactId>
-            <version>5.5.0</version>
-        </dependency>
-        <!-- RestTemplate dependency for API testing -->
+        <!-- Spring Boot RestTemplate dependency for API testing -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
             <version>3.3.4</version>
             <exclusions>
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
                 <exclusion>
                     <groupId>com.google.code.gson</groupId>
                     <artifactId>gson</artifactId>
@@ -113,6 +92,13 @@
             <version>1.18.34</version>
             <scope>provided</scope>
         </dependency>
+        <!-- Datafaker dependency -->
+        <dependency>
+            <groupId>net.datafaker</groupId>
+            <artifactId>datafaker</artifactId>
+            <version>2.3.1</version>
+        </dependency>
+
         <!-- Allure dependencies -->
         <dependency>
             <groupId>io.qameta.allure</groupId>

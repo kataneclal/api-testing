@@ -4,6 +4,10 @@ import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import io.restassured.http.ContentType;
 
+import lombok.Setter;
+import org.springframework.http.*;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
 import response.CustomResponse;
@@ -29,10 +33,10 @@ import java.nio.file.Path;
 
 public final class APIService {
 
-    // Creating an object of RestTemplate
     static String baseURL = ConfProperties.getProperty("base_URL");
-    private final RestTemplate restTemplate = new RestTemplate();   // Creating an object of RestTemplate
-
+    @Setter
+    private static String authToken = null;
+    private static final RestTemplate restTemplate = new RestTemplate();
 
     /**
     "Add a pet" method
@@ -262,4 +266,186 @@ public final class APIService {
 
         return CustomResponse.fromRestAssuredResponse(response, Void.class);
     }
+
+    /**
+     "Get user by username" method
+     */
+    public static CustomResponse<UserDTO> getUserByUsername(String username) {
+        String url = baseURL + "/user/" + username;
+
+        try {
+            UserDTO userDTO = restTemplate.getForObject(url, UserDTO.class);
+            return CustomResponse.<UserDTO>builder()
+                    .statusCode(200)
+                    .message("User retrieved successfully")
+                    .data(userDTO)
+                    .build();
+        } catch (Exception ex) {
+            return CustomResponse.<UserDTO>builder()
+                    .statusCode(404)
+                    .message("User not found: " + ex.getMessage())
+                    .data(null)
+                    .build();
+        }
+    }
+
+    public static CustomResponse<UserDTO> createUser(UserDTO userDTO) {
+        String url = baseURL + "/user";
+
+        try {
+            ResponseEntity<Void> responseEntity = restTemplate.exchange(
+                    url,
+                    HttpMethod.POST,
+                    new HttpEntity<>(userDTO),
+                    Void.class
+            );
+            return CustomResponse.<UserDTO>builder()
+                    .statusCode(responseEntity.getStatusCode().value())
+                    .message("User created successfully.")
+                    .data(null)
+                    .build();
+        } catch (HttpStatusCodeException ex) {
+            return CustomResponse.<UserDTO>builder()
+                    .statusCode(ex.getStatusCode().value())
+                    .message("Failed to create user: " + ex.getMessage())
+                    .data(null)
+                    .build();
+        }
+    }
+
+    public static CustomResponse<String> loginUser(String username, String password) {
+        String url = baseURL + "/user/login?username={username}&password={password}";
+
+        try {
+            // Sending GET request for login
+            ResponseEntity<String> responseEntity = restTemplate.getForEntity(url, String.class, username, password);
+
+            // Extracting token or successful message
+            HttpHeaders headers = responseEntity.getHeaders();
+            String token = headers.getFirst("Authorization");
+            String body = responseEntity.getBody();
+
+            return CustomResponse.<String>builder()
+                    .statusCode(responseEntity.getStatusCode().value())
+                    .message(body != null ? body : "Login successful")
+                    .data(token)
+                    .build();
+        } catch (HttpClientErrorException.BadRequest ex) {
+            return CustomResponse.<String>builder()
+                    .statusCode(400)
+                    .message("Invalid username/password supplied: " + ex.getMessage())
+                    .data(null)
+                    .build();
+        } catch (Exception ex) {
+            return CustomResponse.<String>builder()
+                    .statusCode(500)
+                    .message("An unexpected error occurred: " + ex.getMessage())
+                    .data(null)
+                    .build();
+        }
+    }
+
+    public static CustomResponse<Void> logoutUser() {
+        String url = baseURL + "/user/logout";
+
+        try {
+            // Perform the GET request for logout
+            restTemplate.exchange(url, HttpMethod.GET, null, Void.class);
+
+            return CustomResponse.<Void>builder()
+                    .statusCode(200)
+                    .message("User logged out successfully.")
+                    .build();
+        } catch (HttpClientErrorException ex) {
+            return CustomResponse.<Void>builder()
+                    .statusCode(ex.getStatusCode().value())
+                    .message("Failed to log out: " + ex.getMessage())
+                    .build();
+        } catch (Exception ex) {
+            return CustomResponse.<Void>builder()
+                    .statusCode(500)
+                    .message("An unexpected error occurred: " + ex.getMessage())
+                    .build();
+        }
+    }
+
+
+
+    public static CustomResponse<Void> deleteUser(String username) {
+        String url = baseURL + "/user/" + username;
+
+        try {
+            HttpHeaders headers = createAuthHeaders();
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+            // Perform the DELETE request
+            restTemplate.exchange(url, HttpMethod.DELETE, entity, Void.class);
+
+            return CustomResponse.<Void>builder()
+                    .statusCode(200)
+                    .message("User deleted.")
+                    .build();
+        } catch (HttpClientErrorException.BadRequest ex) {
+            return CustomResponse.<Void>builder()
+                    .statusCode(400)
+                    .message("Invalid username supplied.")
+                    .build();
+        } catch (HttpClientErrorException.NotFound ex) {
+            return CustomResponse.<Void>builder()
+                    .statusCode(404)
+                    .message("User not found.")
+                    .build();
+        } catch (Exception ex) {
+            return CustomResponse.<Void>builder()
+                    .statusCode(500)
+                    .message("An unexpected error occurred: " + ex.getMessage())
+                    .build();
+        }
+    }
+
+
+    public static CustomResponse<UserDTO> updateUser(String username, UserDTO updatedUser) {
+        String url = baseURL + "/user/{username}";
+        HttpHeaders headers = createAuthHeaders();
+        HttpEntity<UserDTO> entity = new HttpEntity<>(updatedUser, headers);
+
+        try {
+            restTemplate.exchange(url, HttpMethod.PUT, entity, Void.class, username);
+
+            return CustomResponse.<UserDTO>builder()
+                    .statusCode(200)
+                    .message("User updated successfully.")
+                    .data(updatedUser)
+                    .build();
+        } catch (HttpClientErrorException.BadRequest ex) {
+            return CustomResponse.<UserDTO>builder()
+                    .statusCode(400)
+                    .message("Invalid user supplied: " + ex.getMessage())
+                    .data(null)
+                    .build();
+        } catch (HttpClientErrorException.NotFound ex) {
+            return CustomResponse.<UserDTO>builder()
+                    .statusCode(404)
+                    .message("User not found: " + ex.getMessage())
+                    .data(null)
+                    .build();
+        } catch (Exception ex) {
+            return CustomResponse.<UserDTO>builder()
+                    .statusCode(500)
+                    .message("An unexpected error occurred: " + ex.getMessage())
+                    .data(null)
+                    .build();
+        }
+    }
+
+    private static HttpHeaders createAuthHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        if (authToken != null) {
+            headers.set("Authorization", "Bearer " + authToken);
+        }
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return headers;
+    }
+
 }
+

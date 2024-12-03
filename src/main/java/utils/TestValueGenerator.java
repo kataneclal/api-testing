@@ -1,6 +1,7 @@
 package utils;
 
 import dto.TagDTO;
+import net.datafaker.Faker;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.Random;
 public class TestValueGenerator {
 
     private static final Random RANDOM = new Random();
+    private static final Faker faker = new Faker();
     private static final String[] PET_STATUS_VALUES = {"available", "pending", "sold"};
     private static final String[] PET_PHOTO_URLS =
             {"https://s3-media0.fl.yelpcdn.com/bphoto/pYD7JNi046dvdayh5ebVDA/258s.jpg",
@@ -94,4 +96,6 @@ public class TestValueGenerator {
         }
         return tags;
     }
+
+
 }
